@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'models' => [
+        'Ticket' => \Coderflex\LaravelTicket\Models\Ticket::class,
+        'Message' => \Coderflex\LaravelTicket\Models\Message::class,
+        'Label' => \Coderflex\LaravelTicket\Models\Label::class,
+        'Category' => \Coderflex\LaravelTicket\Models\Category::class,
+    ],
     /*
     |--------------------------------------------------------------------------
     | Tables Names

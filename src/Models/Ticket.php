@@ -4,11 +4,13 @@ namespace Coderflex\LaravelTicket\Models;
 
 use Coderflex\LaravelTicket\Concerns;
 use Coderflex\LaravelTicket\Scopes\TicketScope;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mallria\Ticket\Enums\TicketPriority;
+use Mallria\Ticket\Enums\TicketStatus;
+use Veelasky\LaravelHashId\Eloquent\HashableId;
 
 /**
  * Coderflex\LaravelTicket\Models\Ticket
@@ -17,25 +19,65 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $user_id
  * @property string $title
  * @property string $message
- * @property string $priority
- * @property string $status
+ * @property TicketPriority $priority
+ * @property TicketStatus $status
  * @property bool $is_resolved
  * @property bool $is_locked
  * @property int $assigned_to
+ * @property array $payload
  */
 class Ticket extends Model
 {
-    use HasFactory;
+    use HashableId;
     use TicketScope;
     use Concerns\InteractsWithTickets;
     use Concerns\InteractsWithTicketRelations;
 
+    const TABLE = 'tickets';
+
+    protected $table = self::TABLE;
+    protected $hasKey = self::TABLE;
+
     /**
-     * The attributes that aren't mass assignable.
+     * 可批量赋值的字段
      *
-     * @var array<string>|bool
+     * @var array<string>
      */
-    protected $guarded = [];
+    protected $fillable = [
+        'uuid',
+        'user_id',
+        'title',
+        'message',
+        'priority',
+        'status',
+        'is_resolved',
+        'is_locked',
+        'assigned_to',
+        'payload', // 允许填充 payload
+    ];
+
+    /**
+     * 字段类型转换
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'status' => TicketStatus::class,
+        'priority' => TicketPriority::class,
+        'is_resolved' => 'boolean',
+        'is_locked' => 'boolean',
+        'payload' => 'array', // 确保 payload 自动转换为数组
+    ];
+
+
+    protected $appends = [
+        'hash',
+    ];
+
+    public function getRouteKeyName()
+    {
+        return 'hash';
+    }
 
     /**
      * Get User RelationShip
@@ -62,7 +104,7 @@ class Ticket extends Model
 
         return $this->hasMany(
             config('laravel_ticket.models.Message'),
-            (string) $tableName['columns']['ticket_foreing_id'],
+            (string)$tableName['columns']['ticket_foreing_id'],
         );
     }
 
